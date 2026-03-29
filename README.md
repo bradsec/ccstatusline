@@ -17,6 +17,8 @@ A two-line statusline for Claude Code showing context window usage, rate-limit b
 
 Color ramp on all bars: green → amber → orange → red → blinking red (at 92%+)
 
+![ccstatusline example](example.png)
+
 ---
 
 ## Requirements
