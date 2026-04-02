@@ -27,16 +27,35 @@ fi
 chmod +x "$HOOK_DEST"
 echo "Installed: $HOOK_DEST"
 
-# Print the settings.json snippet
+# Auto-update settings.json
+STATUSLINE_CMD="node \"$HOOK_DEST\""
+
+if ! command -v node &>/dev/null; then
+  echo ""
+  echo "Warning: node not found — skipping settings.json update."
+  echo "Install Node.js, then add the following to $SETTINGS:"
+  echo ""
+  echo "  {"
+  echo "    \"statusLine\": {"
+  echo "      \"type\": \"command\","
+  echo "      \"command\": \"$STATUSLINE_CMD\""
+  echo "    }"
+  echo "  }"
+else
+  mkdir -p "$(dirname "$SETTINGS")"
+  SETTINGS="$SETTINGS" STATUSLINE_CMD="$STATUSLINE_CMD" node -e "
+    const fs = require('fs');
+    const settingsPath = process.env.SETTINGS;
+    const cmd = process.env.STATUSLINE_CMD;
+    let config = {};
+    if (fs.existsSync(settingsPath)) {
+      try { config = JSON.parse(fs.readFileSync(settingsPath, 'utf8')); } catch(e) {}
+    }
+    config.statusLine = { type: 'command', command: cmd };
+    fs.writeFileSync(settingsPath, JSON.stringify(config, null, 2) + '\n');
+  "
+  echo "Updated: $SETTINGS"
+fi
+
 echo ""
-echo "Add the following to $SETTINGS"
-echo "(merge into the existing JSON object if the file already exists):"
-echo ""
-echo "  {"
-echo "    \"statusLine\": {"
-echo "      \"type\": \"command\","
-echo "      \"command\": \"node \\\"$HOOK_DEST\\\"\""
-echo "    }"
-echo "  }"
-echo ""
-echo "Then restart Claude Code to activate the statusline."
+echo "Restart Claude Code to activate the statusline."
